@@ -1,0 +1,10 @@
+div.body .highlight a
+{
+	color: inherit;
+	text-decoration: inherit;
+}
+
+div.body .highlight a:hover
+{
+	text-decoration: underline;
+}
