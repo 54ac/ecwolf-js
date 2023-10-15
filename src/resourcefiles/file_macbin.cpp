@@ -67,7 +67,7 @@
 struct FMacBinHeader
 {
 public:
-	BYTE version;
+	BYTE oldVersion;
 	BYTE filenameLength;
 	char filename[63];
 	char fileType[4];
@@ -83,8 +83,22 @@ public:
 	DWORD resourceForkLength;
 	DWORD creationDate;
 	DWORD modifiedDate;
-	char pad2[27];
-	WORD reserved;
+	WORD commentLength;
+	// Mac Binary 2
+	BYTE finderFlags2;
+	// Mac Binary 3
+	char macBin3Signature[4];
+	BYTE filenameScript;
+	BYTE extendedFinderFlags;
+	char pad2[8];
+	// End Mac Binary 3
+	DWORD unpackedLength;
+	WORD secondaryHeaderLength;
+	BYTE version;
+	BYTE minimumVersion;
+	WORD crc;
+	// End Mac Binary 2
+	WORD pad3;
 };
 
 struct FResHeader
@@ -432,7 +446,7 @@ class FMacBin : public FResourceFile
 			header.dataForkLength = BigLong(header.dataForkLength);
 			header.resourceForkLength = BigLong(header.resourceForkLength);
 			resourceForkOffset = sizeof(FMacBinHeader) + ((header.dataForkLength+127)&(~0x7F));
-			if(header.version != 0)
+			if(header.oldVersion != 0)
 				return false;
 
 			// We only care about the resource fork so seek to it and read the header
@@ -713,16 +727,19 @@ FResourceFile *CheckMacBin(const char *filename, FileReader *file, bool quiet)
 {
 	if(file->GetLength() > 128)
 	{
-		char type[8];
-		unsigned int sizes[2];
-		file->Seek(65, SEEK_SET);
-		file->Read(type, 8);
-		file->Seek(83, SEEK_SET);
-		file->Read(&sizes, 8);
+		FMacBinHeader header;
+		file->Read(&header, sizeof(FMacBinHeader));
 		file->Seek(0, SEEK_SET);
 
-		if((strncmp(type, "APPLWOLF", 8) == 0 || strncmp(type, "MAPSWOLF", 8) == 0) &&
-			BigLong(sizes[0]) + BigLong(sizes[1]) < static_cast<unsigned>(file->GetLength()))
+		// type should be APPLWOLF or MAPSWOLF but it's possible users will use
+		// a lossy process to create their macbin and get ???????? instead.
+		bool validType =
+			(strncmp(header.fileType, "APPL", 4) == 0 || strncmp(header.fileType, "MAPS", 4) == 0 || strncmp(header.fileType, "????", 4) == 0) &&
+			(strncmp(header.fileCreator, "WOLF", 4) == 0 || strncmp(header.fileCreator, "????", 4) == 0);
+
+		if(header.oldVersion == 0 && header.filenameLength > 0 && header.filenameLength <= 63 &&
+			(validType || strncmp(header.macBin3Signature, "mBIN", 4) == 0) &&
+			BigLong(header.dataForkLength) + BigLong(header.resourceForkLength) + 128 < static_cast<unsigned>(file->GetLength()))
 		{
 			FResourceFile *rf = new FMacBin(filename, file);
 			if(rf->Open(quiet)) return rf;
