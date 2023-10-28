@@ -100,13 +100,14 @@ static void R_DrawPlane(byte *vbuf, unsigned vbufPitch, int min_wallheight, int 
 					oldmapy = cury;
 					const MapSpot spot = map->GetSpot(oldmapx%mapwidth, oldmapy%mapheight, 0);
 
-					if(spot->sector)
+					FTextureID curtex = spot->sector ? spot->sector->texture[floor ? MapSector::Floor : MapSector::Ceiling] : FNullTextureID();
+
+					if (curtex != lasttex)
 					{
-						FTextureID curtex = spot->sector->texture[floor ? MapSector::Floor : MapSector::Ceiling];
-						if (curtex != lasttex && curtex.isValid())
+						lasttex = curtex;
+						if(curtex.isValid())
 						{
 							FTexture * const texture = TexMan(curtex);
-							lasttex = curtex;
 							tex = texture->GetPixels();
 							texwidth = texture->GetWidth();
 							texheight = texture->GetHeight();
@@ -116,9 +117,9 @@ static void R_DrawPlane(byte *vbuf, unsigned vbufPitch, int min_wallheight, int 
 							useOptimized = texwidth == 64 && texheight == 64 && texxscale == FRACUNIT>>10 && texyscale == -FRACUNIT>>10;
 							isMasked = texture->bMasked;
 						}
+						else
+							tex = NULL;
 					}
-					else
-						tex = NULL;
 				}
 
 				if(tex)
