@@ -792,10 +792,9 @@ void GameMap::ReadMacData()
 	wallListLump.Read(&walltexs[0], walltexs.Size()*2);
 	for(unsigned int i = 0;i < walltexs.Size();++i)
 		walltexs[i] = BigShort(walltexs[i]);
-		
 
 	// Find used tiles
-	MacTile wallsused[TEX_MASK+1+5];
+	MacTile wallsused[TEX_MASK+1+5] = {};
 	for(unsigned int i = 0;i < 64*64;++i)
 		wallsused[tilemap[i]&TEX_MASK].used = true;
 
