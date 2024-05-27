@@ -33,7 +33,7 @@
 **
 */
 
-#if !defined(_WIN32) && !defined(__sun)
+#if !defined(_WIN32) && !defined(__sun) && !defined(__EMSCRIPTEN__)
 #if !defined(__ANDROID__) || (__ANDROID_API__ >= 21)
 #define USE_FTS 1
 #endif
@@ -102,7 +102,7 @@ public:
 
 //==========================================================================
 //
-// 
+//
 //
 //==========================================================================
 
@@ -142,7 +142,7 @@ int FDirectory::AddDirectory(const char *dirpath)
 
 	dirmatch = dirpath;
 	dirmatch += '*';
-	
+
 	if ((handle = _findfirst(dirmatch, &fileinfo)) == -1)
 	{
 		Printf("Could not scan '%s': %s\n", dirpath, strerror(errno));

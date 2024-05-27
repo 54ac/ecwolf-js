@@ -4,3 +4,17 @@ android-libs/launcher/src/com/beloko/idtech/R.java
 /*build*/
 /results/
 /.idea/
+
+/CMakeFiles/
+CMakeCache.txt
+CPackConfig.cmake
+CPackSourceConfig.cmake
+cmake_install.cmake
+Makefile
+
+js-build.bat
+/js-static/
+
+*.a
+
+*.lnk

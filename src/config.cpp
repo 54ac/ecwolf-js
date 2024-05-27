@@ -43,6 +43,10 @@
 #include "scanner.h"
 #include "version.h"
 
+#ifdef __EMSCRIPTEN__
+	#include <emscripten.h>
+#endif
+
 typedef TMap<FName, TUniquePtr<SettingsData> > SettingsMap;
 
 Config config;
@@ -191,6 +195,15 @@ void Config::SaveConfig()
 			}
 		}
 		fclose(stream);
+
+		#ifdef __EMSCRIPTEN__
+			EM_ASM(
+				FS.syncfs((err) => {
+					if (!err) console.log("Saved config");
+					else console.error("Error saving config: " + err);
+				});
+			);
+		#endif
 	}
 }
 

@@ -61,6 +61,10 @@
 #include "wl_play.h"
 #include "textures/textures.h"
 
+#ifdef __EMSCRIPTEN__
+	#include <emscripten.h>
+#endif
+
 void R_RenderView();
 extern byte* vbuf;
 extern unsigned vbufPitch;
@@ -723,6 +727,16 @@ bool Save(const FString &filename, const FString &title)
 
 	M_FinishPNG(fileh);
 	fclose(fileh);
+
+	#ifdef __EMSCRIPTEN__
+		EM_ASM(
+			FS.syncfs((err) => {
+				if (!err) console.log("Saved game");
+				else console.error("Error writing save file: " + err);
+			});
+		);
+	#endif
+
 	return true;
 }
 

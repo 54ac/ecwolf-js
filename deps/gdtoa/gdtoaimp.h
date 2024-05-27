@@ -201,7 +201,7 @@ THIS SOFTWARE.
 * it turns out that it has a true long double type. I thought that
 * all ia32 compilers had phased out extended precision.
 */
-#elif defined(__MINGW32__)
+#elif defined(__MINGW32__) || defined(__EMSCRIPTEN__)
 #define f_QNAN 0x7fc00000
 #define d_QNAN0 0x7ff80000
 #define d_QNAN1 0x0

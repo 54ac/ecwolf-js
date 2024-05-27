@@ -241,6 +241,9 @@ if(WIN32)
 	)
 elseif(APPLE OR ANDROID)
 	set(NO_GTK ON)
+elseif(${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
+	set(NO_GTK ON)
+	target_sources(engine PRIVATE emscripten/i_main.cpp)
 else()
 	option( NO_GTK "Disable GTK+ dialogs (Not applicable to Windows)" )
 
@@ -320,23 +323,37 @@ list(APPEND HEADER_FILES ${CMAKE_CURRENT_BINARY_DIR}/versiondefs.h)
 target_sources(engine PRIVATE ${HEADER_FILES})
 
 add_dependencies(engine revision_check)
-target_link_libraries(engine PRIVATE
-	SDL2_mixer::SDL2_mixer
-	SDL2_net::SDL2_net
-	SDL2::SDL2
-	${BZIP2_LIBRARIES}
-	${JPEG_LIBRARIES}
-	lzma
-	gdtoa
-	ZLIB::ZLIB
-)
-target_include_directories(engine PRIVATE
-	${BZIP2_INCLUDE_DIR}
-	${JPEG_INCLUDE_DIR}
-	${CMAKE_CURRENT_BINARY_DIR}
-	${CMAKE_CURRENT_SOURCE_DIR}
-	${CMAKE_CURRENT_SOURCE_DIR}/g_shared
-)
+
+if(${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
+	target_link_libraries(engine PRIVATE
+		lzma
+		gdtoa
+	)
+
+	target_include_directories(engine PRIVATE
+		${CMAKE_CURRENT_BINARY_DIR}
+		${CMAKE_CURRENT_SOURCE_DIR}
+		${CMAKE_CURRENT_SOURCE_DIR}/g_shared
+	)
+else()
+	target_link_libraries(engine PRIVATE
+		SDL2_mixer::SDL2_mixer
+		SDL2_net::SDL2_net
+		SDL2::SDL2
+		${BZIP2_LIBRARIES}
+		${JPEG_LIBRARIES}
+		lzma
+		gdtoa
+		ZLIB::ZLIB
+	)
+	target_include_directories(engine PRIVATE
+		${BZIP2_INCLUDE_DIR}
+		${JPEG_INCLUDE_DIR}
+		${CMAKE_CURRENT_BINARY_DIR}
+		${CMAKE_CURRENT_SOURCE_DIR}
+		${CMAKE_CURRENT_SOURCE_DIR}/g_shared
+	)
+endif()
 
 set_target_properties(engine PROPERTIES
 	CXX_STANDARD 98
@@ -351,7 +368,7 @@ set_target_properties(engine PROPERTIES
 if(NOT ANDROID)
 	install(TARGETS engine BUNDLE DESTINATION ${OUTPUT_DIR} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT Runtime)
 
-	if(NOT WIN32 AND NOT APPLE)
+	if(NOT WIN32 AND NOT APPLE AND NOT ${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
 		configure_file(posix/engine.desktop.in posix/engine.desktop)
 		install(FILES "${CMAKE_CURRENT_BINARY_DIR}/posix/engine.desktop" DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/applications" RENAME "${ENGINE_BINARY_NAME}.desktop")
 		install(FILES "posix/icon.svg" DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/scalable/apps" RENAME "${ENGINE_BINARY_NAME}.svg")

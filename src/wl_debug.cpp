@@ -35,6 +35,10 @@
 #include "wl_shade.h"
 #include "filesys.h"
 
+#ifdef __EMSCRIPTEN__
+	#include <emscripten.h>
+#endif
+
 #ifdef USE_CLOUDSKY
 #include "wl_cloudsky.h"
 #endif
@@ -76,6 +80,15 @@ void PictureGrabber (void)
 	M_FinishPNG(file);
 	fclose(file);
 	screen->ReleaseScreenshotBuffer();
+
+	#ifdef __EMSCRIPTEN__
+		EM_ASM(
+			FS.syncfs((err) => {
+				if (!err) console.log("Screenshot saved");
+				else console.error("Failed to save screenshot: " + err);
+			});
+		);
+	#endif
 
 	US_CenterWindow (18,2);
 	US_PrintCentered ("Screenshot taken");

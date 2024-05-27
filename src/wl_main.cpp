@@ -47,6 +47,10 @@
 #include "g_conversation.h"
 #include "g_intermission.h"
 
+#ifdef __EMSCRIPTEN__
+	#include <emscripten.h>
+#endif
+
 #include <clocale>
 
 /*
@@ -650,6 +654,11 @@ void NewViewSize (int width, unsigned int scrWidth, unsigned int scrHeight)
 
 void Quit ()
 {
+	#ifdef __EMSCRIPTEN__
+		emscripten_cancel_main_loop();
+		printf("Emscripten main loop cancelled\n");
+	#endif
+
 	throw CNoRunExit();
 }
 
@@ -1275,6 +1284,11 @@ int WL_Main (int argc, char *argv[])
 {
 	try
 	{
+		#ifdef __EMSCRIPTEN__
+			emscripten_set_main_loop(DemoLoop, 0, 0);
+			printf("Emscripten main loop set\n");
+		#endif
+
 		// Stop the C library from screwing around with its functions according
 		// to the system locale.
 		setlocale(LC_ALL, "C");

@@ -86,12 +86,12 @@ endif()
 # Support cross compiling
 option(TOOLS_ONLY "Only build the tools, not ecwolf itself (useful for cross-compiling)" OFF)
 
-option( FORCE_CROSSCOMPILE "Turn on cross compiling." NO )
+option( FORCE_CROSSCOMPILE "Turn on cross compiling." OFF)
 if( FORCE_CROSSCOMPILE )
 	set( CMAKE_CROSSCOMPILING TRUE )
 endif()
 
-if(CMAKE_CROSSCOMPILING)
+if(CMAKE_CROSSCOMPILING AND NOT ${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
 	set(IMPORT_EXECUTABLES "IMPORTFILE-NOTFOUND" CACHE FILEPATH "Export file from native build.")
 	include(${IMPORT_EXECUTABLES})
 endif()
@@ -143,14 +143,58 @@ option(INTERNAL_ZLIB "Force build with internal zlib" OFF)
 option(INTERNAL_BZIP2 "Force build with internal bzip2" OFF)
 option(INTERNAL_JPEG "Force build with internal libjpeg" OFF)
 
-if(NOT INTERNAL_ZLIB)
-	find_package(ZLIB QUIET)
-endif()
-if(NOT INTERNAL_BZIP2)
-	find_package(BZip2 QUIET)
-endif()
-if(NOT INTERNAL_JPEG)
-	find_package(JPEG QUIET)
+option(EMSCRIPTEN_DEBUG "Emscripten debug build" ON)
+option(EMSCRIPTEN_DEFAULT_FRONTEND "Use Emscripten's built-in frontend - put ecwolf.pk3 in /js-static and IWADs in /js-static/iwad beforehand" ON)
+
+if(${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
+	set(EMSDK_INCLUDE "$ENV{EMSDK}/upstream/emscripten/cache/sysroot/include")
+
+	# Use Emscripten libraries
+  set(USE_FLAGS "-D__EMSCRIPTEN__ -sUSE_SDL=2 -sUSE_SDL_MIXER=2 -sUSE_SDL_NET=2 -sUSE_ZLIB -sUSE_BZIP2 -sUSE_LIBJPEG -I$EMSDK_INCLUDE")
+
+	# Default asyncify stack size crashes on game save, can probably be optimized
+	set(USE_LINKER_FLAGS "-sENVIRONMENT=web -sINITIAL_MEMORY=32MB -sASYNCIFY -sASYNCIFY_STACK_SIZE=16384")
+
+	if(EMSCRIPTEN_DEBUG)
+		set(USE_FLAGS "${USE_FLAGS} -O0 -g -fexceptions")
+		set(USE_LINKER_FLAGS "${USE_LINKER_FLAGS} --emrun")
+	else()
+		set(USE_FLAGS "${USE_FLAGS} -Oz -g0")
+	endif()
+
+	set(ZLIB_INCLUDE_DIR "${EMSDK_INCLUDE}")
+	set(BZIP2_INCLUDE_DIR "${EMSDK_INCLUDE}")
+	set(JPEG_INCLUDE_DIR "${EMSDK_INCLUDE}")
+	set(ZLIB_FOUND true)
+	set(BZIP2_FOUND true)
+	set(JPEG_FOUND true)
+
+	if(EMSCRIPTEN_DEFAULT_FRONTEND)
+		# Run init scripts for default frontend
+		set(USE_LINKER_FLAGS "${USE_LINKER_FLAGS} -lidbfs.js --pre-js ${CMAKE_SOURCE_DIR}/src/emscripten/js/setupPreRun.js")
+
+		# Pack game files - custom frontends can e.g. preload files with FS.createPreloadedFile in Module.preRun JS scripts instead
+		set(USE_LINKER_FLAGS "${USE_LINKER_FLAGS} --preload-file ${CMAKE_SOURCE_DIR}/js-static/ecwolf.pk3@ecwolf.pk3 --preload-file ${CMAKE_SOURCE_DIR}/js-static/iwad@/")
+
+		set(CMAKE_EXECUTABLE_SUFFIX .html)
+	else()
+		set(CMAKE_EXECUTABLE_SUFFIX .js)
+	endif()
+
+
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${USE_FLAGS}")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${USE_FLAGS}")
+	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${USE_FLAGS} ${USE_LINKER_FLAGS}")
+else()
+	if(NOT INTERNAL_ZLIB)
+		find_package(ZLIB QUIET)
+	endif()
+	if(NOT INTERNAL_BZIP2)
+		find_package(BZip2 QUIET)
+	endif()
+	if(NOT INTERNAL_JPEG)
+		find_package(JPEG QUIET)
+	endif()
 endif()
 
 if(NOT ZLIB_FOUND OR INTERNAL_ZLIB)
@@ -183,7 +227,9 @@ if(NOT TOOLS_ONLY)
 		message(STATUS "Using system libjpeg, includes found at ${JPEG_INCLUDE_DIR}")
 	endif()
 
-	include(LocateSDL2.cmake)
+	if(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
+		include(LocateSDL2.cmake)
+	endif()
 endif()
 
 if(MSVC)
@@ -212,7 +258,10 @@ if(NOT TOOLS_ONLY)
 	endif()
 
 	add_subdirectory(src)
-	add_subdirectory(wadsrc)
+
+	if(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
+		add_subdirectory(wadsrc)
+	endif()
 endif()
 
 if(NOT APPLE)

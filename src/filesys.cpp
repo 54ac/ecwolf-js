@@ -278,11 +278,13 @@ void SetupPaths(int argc, const char * const *argv)
 		I_Error("Could not create your preferences files.\n");
 	}
 	configDir = osxDir;
+#elif defined(__EMSCRIPTEN__)
+	configDir = "/ecwolf";
 #else
 	char *home = getenv("HOME");
 	char *xdg_config = getenv("XDG_CONFIG_HOME");
 	if(xdg_config == NULL || *xdg_config == '\0')
-	{	
+	{
 		if(home == NULL || *home == '\0')
 		{
 			I_Error("Please set your HOME environment variable.\n");
@@ -303,6 +305,8 @@ void SetupPaths(int argc, const char * const *argv)
 	osxDir = OSX_FindFolder(DIR_Documents);
 	if(!osxDir.IsEmpty())
 		documentsDir = osxDir + "/" GAME_DIR;
+#elif defined(__EMSCRIPTEN__)
+	documentsDir = "/ecwolf";
 #else
 	char *xdg_data = getenv("XDG_DATA_HOME");
 	if(xdg_data == NULL || *xdg_data == '\0')
