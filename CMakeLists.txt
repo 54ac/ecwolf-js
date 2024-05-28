@@ -150,16 +150,16 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
 	set(EMSDK_INCLUDE "$ENV{EMSDK}/upstream/emscripten/cache/sysroot/include")
 
 	# Use Emscripten libraries
-  set(USE_FLAGS "-D__EMSCRIPTEN__ -sUSE_SDL=2 -sUSE_SDL_MIXER=2 -sUSE_SDL_NET=2 -sUSE_ZLIB -sUSE_BZIP2 -sUSE_LIBJPEG -I$EMSDK_INCLUDE")
+  set(USE_FLAGS "-D__EMSCRIPTEN__ -sUSE_SDL=2 -sUSE_SDL_MIXER=2 -sUSE_SDL_NET=2 -sUSE_ZLIB -sUSE_BZIP2 -sUSE_LIBJPEG -I$EMSDK_INCLUDE -fexceptions")
 
 	# Default asyncify stack size crashes on game save, can probably be optimized
-	set(USE_LINKER_FLAGS "-sENVIRONMENT=web -sINITIAL_MEMORY=32MB -sASYNCIFY -sASYNCIFY_STACK_SIZE=16384")
+	set(USE_LINKER_FLAGS "-sENVIRONMENT=web -sINITIAL_MEMORY=32MB -sASYNCIFY -sASYNCIFY_STACK_SIZE=16384 -sMALLOC=emmalloc")
 
 	if(EMSCRIPTEN_DEBUG)
-		set(USE_FLAGS "${USE_FLAGS} -O0 -g -fexceptions")
+		set(USE_FLAGS "${USE_FLAGS} -O0 -g")
 		set(USE_LINKER_FLAGS "${USE_LINKER_FLAGS} --emrun")
 	else()
-		set(USE_FLAGS "${USE_FLAGS} -Oz -fexceptions")
+		set(USE_FLAGS "${USE_FLAGS} -Os")
 	endif()
 
 	set(ZLIB_INCLUDE_DIR "${EMSDK_INCLUDE}")
