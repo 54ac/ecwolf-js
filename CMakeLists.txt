@@ -159,7 +159,7 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
 		set(USE_FLAGS "${USE_FLAGS} -O0 -g -fexceptions")
 		set(USE_LINKER_FLAGS "${USE_LINKER_FLAGS} --emrun")
 	else()
-		set(USE_FLAGS "${USE_FLAGS} -Oz -g0")
+		set(USE_FLAGS "${USE_FLAGS} -Oz -fexceptions")
 	endif()
 
 	set(ZLIB_INCLUDE_DIR "${EMSDK_INCLUDE}")
