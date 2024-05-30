@@ -186,7 +186,7 @@ endif()
 if(NOT STRNICMP_EXISTS)
 	target_compile_definitions(engine PRIVATE -Dstrnicmp=strncasecmp)
 endif()
-if(NOT ATOLL_EXISTS AND NOT ${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
+if(NOT ATOLL_EXISTS AND NOT EMSCRIPTEN)
 	target_compile_definitions(engine PRIVATE -Datoll=_atoi64)
 endif()
 
@@ -241,7 +241,7 @@ if(WIN32)
 	)
 elseif(APPLE OR ANDROID)
 	set(NO_GTK ON)
-elseif(${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
+elseif(EMSCRIPTEN)
 	set(NO_GTK ON)
 	target_sources(engine PRIVATE emscripten/i_main.cpp)
 else()
@@ -324,7 +324,7 @@ target_sources(engine PRIVATE ${HEADER_FILES})
 
 add_dependencies(engine revision_check)
 
-if(${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
+if(EMSCRIPTEN)
 	target_link_libraries(engine PRIVATE
 		lzma
 		gdtoa
@@ -369,7 +369,7 @@ set_target_properties(engine PROPERTIES
 if(NOT ANDROID)
 	install(TARGETS engine BUNDLE DESTINATION ${OUTPUT_DIR} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT Runtime)
 
-	if(NOT WIN32 AND NOT APPLE AND NOT ${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
+	if(NOT WIN32 AND NOT APPLE AND NOT EMSCRIPTEN)
 		configure_file(posix/engine.desktop.in posix/engine.desktop)
 		install(FILES "${CMAKE_CURRENT_BINARY_DIR}/posix/engine.desktop" DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/applications" RENAME "${ENGINE_BINARY_NAME}.desktop")
 		install(FILES "posix/icon.svg" DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/scalable/apps" RENAME "${ENGINE_BINARY_NAME}.svg")

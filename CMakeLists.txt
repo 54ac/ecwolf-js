@@ -26,6 +26,10 @@ set(CPACK_PACKAGE_VERSION_MINOR ${VERSION_MINOR})
 set(CPACK_PACKAGE_VERSION_PATCH ${VERSION_PATCH})
 set(CPACK_PROJECT_CONFIG_FILE "${CMAKE_CURRENT_SOURCE_DIR}/CPackProjectConfig.cmake")
 
+if(${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
+	set(EMSCRIPTEN ON)
+endif()
+
 if(WIN32)
 	set(CPACK_GENERATOR "ZIP")
 else()
@@ -91,7 +95,7 @@ if( FORCE_CROSSCOMPILE )
 	set( CMAKE_CROSSCOMPILING TRUE )
 endif()
 
-if(CMAKE_CROSSCOMPILING AND NOT ${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
+if(CMAKE_CROSSCOMPILING AND NOT EMSCRIPTEN)
 	set(IMPORT_EXECUTABLES "IMPORTFILE-NOTFOUND" CACHE FILEPATH "Export file from native build.")
 	include(${IMPORT_EXECUTABLES})
 endif()
@@ -146,14 +150,15 @@ option(INTERNAL_JPEG "Force build with internal libjpeg" OFF)
 option(EMSCRIPTEN_DEBUG "Emscripten debug build" ON)
 option(EMSCRIPTEN_DEFAULT_FRONTEND "Use Emscripten's built-in frontend - put ecwolf.pk3 in /js-static and IWADs in /js-static/iwad beforehand" ON)
 
-if(${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
+if(EMSCRIPTEN)
 	set(EMSDK_INCLUDE "$ENV{EMSDK}/upstream/emscripten/cache/sysroot/include")
 
 	# Use Emscripten libraries
   set(USE_FLAGS "-D__EMSCRIPTEN__ -sUSE_SDL=2 -sUSE_SDL_MIXER=2 -sUSE_SDL_NET=2 -sUSE_ZLIB -sUSE_BZIP2 -sUSE_LIBJPEG -I$EMSDK_INCLUDE -sDISABLE_EXCEPTION_CATCHING=0")
 
 	# Default asyncify stack size crashes on game save, can probably be optimized
-	set(USE_LINKER_FLAGS "-sENVIRONMENT=web -sINITIAL_MEMORY=32MB -sASYNCIFY -sASYNCIFY_STACK_SIZE=16384 -sMALLOC=emmalloc")
+	# Use IndexedDB by default
+	set(USE_LINKER_FLAGS "-sENVIRONMENT=web -sINITIAL_MEMORY=32MB -sASYNCIFY -sASYNCIFY_STACK_SIZE=16384 -sMALLOC=emmalloc -lidbfs.js")
 
 	if(EMSCRIPTEN_DEBUG)
 		set(USE_FLAGS "${USE_FLAGS} -O0 -g")
@@ -171,13 +176,16 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
 
 	if(EMSCRIPTEN_DEFAULT_FRONTEND)
 		# Run init scripts for default frontend
-		set(USE_LINKER_FLAGS "${USE_LINKER_FLAGS} -lidbfs.js --pre-js ${CMAKE_SOURCE_DIR}/src/emscripten/js/setupPreRun.js")
+		set(USE_LINKER_FLAGS "${USE_LINKER_FLAGS} --pre-js ${CMAKE_SOURCE_DIR}/src/emscripten/js/setupPreRun.js")
 
 		# Pack game files - custom frontends can e.g. preload files with FS.createPreloadedFile in Module.preRun JS scripts instead
 		set(USE_LINKER_FLAGS "${USE_LINKER_FLAGS} --preload-file ${CMAKE_SOURCE_DIR}/js-static/ecwolf.pk3@ecwolf.pk3 --preload-file ${CMAKE_SOURCE_DIR}/js-static/iwad@/")
 
 		set(CMAKE_EXECUTABLE_SUFFIX .html)
-	else()
+	elseif(EMSCRIPTEN_CUSTOM_FRONTEND)
+		# Sane defaults for custom frontend
+		set(USE_LINKER_FLAGS "${USE_LINKER_FLAGS} -sMODULARIZE -sEXPORT_ES6")
+
 		set(CMAKE_EXECUTABLE_SUFFIX .js)
 	endif()
 
@@ -227,7 +235,7 @@ if(NOT TOOLS_ONLY)
 		message(STATUS "Using system libjpeg, includes found at ${JPEG_INCLUDE_DIR}")
 	endif()
 
-	if(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
+	if(NOT EMSCRIPTEN)
 		include(LocateSDL2.cmake)
 	endif()
 endif()
@@ -259,7 +267,7 @@ if(NOT TOOLS_ONLY)
 
 	add_subdirectory(src)
 
-	if(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
+	if(NOT EMSCRIPTEN)
 		add_subdirectory(wadsrc)
 	endif()
 endif()

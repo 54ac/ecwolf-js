@@ -30,7 +30,7 @@ add_library( textscreen STATIC
   txt_window_action.c txt_window_action.h
 )
 
-if(${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
+if(EMSCRIPTEN)
   target_link_libraries( textscreen )
 else()
   target_link_libraries( textscreen PUBLIC SDL2::SDL2 )

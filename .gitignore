@@ -19,3 +19,11 @@ js-build.bat
 
 *.lnk
 /.vscode/
+
+/android-libs/
+/deps/bzip2/
+/deps/jpeg-6b/
+/deps/SDL/
+/deps/SDL_mixer/
+/deps/SDL_net/
+/deps/zlib/
