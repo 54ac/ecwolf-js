@@ -1,7 +1,5 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright(C) 2006 Simon Howard
+// Copyright(C) 2005-2014 Simon Howard
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
@@ -12,11 +10,6 @@
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
-// 02111-1307, USA.
 //
 
 #ifndef TXT_WINDOW_H
@@ -79,7 +72,7 @@ struct txt_window_s
 
     // Actions that appear in the box at the bottom of the window
 
-    txt_window_action_t *actions[3];
+    txt_widget_t *actions[3];
 
     // Callback functions to invoke when keys/mouse buttons are pressed
 
@@ -92,17 +85,22 @@ struct txt_window_s
 
     int window_x, window_y;
     unsigned int window_w, window_h;
+
+    // URL of a webpage with help about this window. If set, a help key
+    // indicator is shown while this window is active.
+    const char *help_url;
 };
 
 /**
  * Open a new window.
  *
- * @param title        Title to display in the titlebar of the new window.
+ * @param title        Title to display in the titlebar of the new window
+ *                     (UTF-8 format).
  * @return             Pointer to a new @ref txt_window_t structure
  *                     representing the new window.
  */
 
-txt_window_t *TXT_NewWindow(char *title);
+txt_window_t *TXT_NewWindow(const char *title);
 
 /**
  * Close a window.
@@ -161,7 +159,7 @@ void TXT_SetWindowPosition(txt_window_t *window,
  */
 
 void TXT_SetWindowAction(txt_window_t *window, txt_horiz_align_t position,
-                         txt_window_action_t *action);
+                         TXT_UNCAST_ARG(action));
 
 /**
  * Set a callback function to be invoked whenever a key is pressed within
@@ -191,6 +189,33 @@ void TXT_SetMouseListener(txt_window_t *window,
                           TxtWindowMousePress mouse_listener,
                           void *user_data);
 
-#endif /* #ifndef TXT_WINDOW_H */
+/**
+ * Open a window displaying a message.
+ *
+ * @param title           Title of the window (UTF-8 format).
+ * @param message         The message to display in the window (UTF-8 format).
+ * @return                The new window.
+ */
 
+txt_window_t *TXT_MessageBox(const char *title, const char *message, ...);
+
+/**
+ * Set the help URL for the given window.
+ *
+ * @param window          The window.
+ * @param help_url        String containing URL of the help page for this
+ *                        window, or NULL to set no help for this window.
+ */
+
+void TXT_SetWindowHelpURL(txt_window_t *window, const char *help_url);
+
+/**
+ * Open the help URL for the given window, if one is set.
+ *
+ * @param window          The window.
+ */
+
+void TXT_OpenWindowHelpURL(txt_window_t *window);
+
+#endif /* #ifndef TXT_WINDOW_H */
 

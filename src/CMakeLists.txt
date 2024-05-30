@@ -186,7 +186,7 @@ endif()
 if(NOT STRNICMP_EXISTS)
 	target_compile_definitions(engine PRIVATE -Dstrnicmp=strncasecmp)
 endif()
-if(NOT ATOLL_EXISTS)
+if(NOT ATOLL_EXISTS AND NOT ${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
 	target_compile_definitions(engine PRIVATE -Datoll=_atoi64)
 endif()
 
@@ -328,6 +328,7 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
 	target_link_libraries(engine PRIVATE
 		lzma
 		gdtoa
+		textscreen
 	)
 
 	target_include_directories(engine PRIVATE

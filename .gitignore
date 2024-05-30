@@ -18,3 +18,4 @@ js-build.bat
 *.a
 
 *.lnk
+/.vscode/

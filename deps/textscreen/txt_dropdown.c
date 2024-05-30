@@ -1,7 +1,5 @@
-// Emacs style mode select   -*- C++ -*- 
-//-----------------------------------------------------------------------------
 //
-// Copyright(C) 2006 Simon Howard
+// Copyright(C) 2005-2014 Simon Howard
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
@@ -12,11 +10,6 @@
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
-// 02111-1307, USA.
 //
 
 #include <stdlib.h>
@@ -29,9 +22,10 @@
 #include "txt_gui.h"
 #include "txt_io.h"
 #include "txt_main.h"
+#include "txt_utf8.h"
 #include "txt_window.h"
 
-typedef struct 
+typedef struct
 {
     txt_window_t *window;
     txt_dropdown_list_t *list;
@@ -49,14 +43,29 @@ static int ValidSelection(txt_dropdown_list_t *list)
 
 static int SelectorWindowY(txt_dropdown_list_t *list)
 {
+    int result;
+
     if (ValidSelection(list))
     {
-        return list->widget.y - 1 - *list->variable;
+        result = list->widget.y - 1 - *list->variable;
     }
     else
     {
-        return list->widget.y - 1 - (list->num_values / 2);
+        result = list->widget.y - 1 - (list->num_values / 2);
     }
+
+    // Keep dropdown inside the screen.
+
+    if (result < 1)
+    {
+        result = 1;
+    }
+    else if (result + list->num_values > (TXT_SCREEN_H - 3))
+    {
+        result = TXT_SCREEN_H - list->num_values - 3;
+    }
+
+    return result;
 }
 
 // Called when a button in the selector window is pressed
@@ -188,7 +197,7 @@ static int DropdownListWidth(txt_dropdown_list_t *list)
 
     for (i=0; i<list->num_values; ++i)
     {
-        int w = strlen(list->values[i]);
+        int w = TXT_UTF8_Strlen(list->values[i]);
         if (w > result) 
         {
             result = w;
@@ -232,7 +241,7 @@ static void TXT_DropdownListDrawer(TXT_UNCAST_ARG(list))
 
     TXT_DrawString(str);
 
-    for (i=strlen(str); i<list->widget.w; ++i) 
+    for (i = TXT_UTF8_Strlen(str); i < list->widget.w; ++i)
     {
         TXT_DrawString(" ");
     }
@@ -279,7 +288,7 @@ txt_widget_class_t txt_dropdown_list_class =
     NULL,
 };
 
-txt_dropdown_list_t *TXT_NewDropdownList(int *variable, char **values, 
+txt_dropdown_list_t *TXT_NewDropdownList(int *variable, const char **values,
                                          int num_values)
 {
     txt_dropdown_list_t *list;

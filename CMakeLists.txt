@@ -137,7 +137,7 @@ endfunction()
 set(OUTPUT_DIR ${CMAKE_BINARY_DIR} CACHE PATH "Directory in which to build ECWolf.")
 
 option(GPL "Build GPL edition" ON)
-option(USE_LIBTEXTSCREEN "Use libtextscreen instead of console iwad picker." OFF)
+option(USE_LIBTEXTSCREEN "Use libtextscreen instead of console iwad picker." ON)
 
 option(INTERNAL_ZLIB "Force build with internal zlib" OFF)
 option(INTERNAL_BZIP2 "Force build with internal bzip2" OFF)
@@ -150,7 +150,7 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
 	set(EMSDK_INCLUDE "$ENV{EMSDK}/upstream/emscripten/cache/sysroot/include")
 
 	# Use Emscripten libraries
-  set(USE_FLAGS "-D__EMSCRIPTEN__ -sUSE_SDL=2 -sUSE_SDL_MIXER=2 -sUSE_SDL_NET=2 -sUSE_ZLIB -sUSE_BZIP2 -sUSE_LIBJPEG -I$EMSDK_INCLUDE -fexceptions")
+  set(USE_FLAGS "-D__EMSCRIPTEN__ -sUSE_SDL=2 -sUSE_SDL_MIXER=2 -sUSE_SDL_NET=2 -sUSE_ZLIB -sUSE_BZIP2 -sUSE_LIBJPEG -I$EMSDK_INCLUDE -sDISABLE_EXCEPTION_CATCHING=0")
 
 	# Default asyncify stack size crashes on game save, can probably be optimized
 	set(USE_LINKER_FLAGS "-sENVIRONMENT=web -sINITIAL_MEMORY=32MB -sASYNCIFY -sASYNCIFY_STACK_SIZE=16384 -sMALLOC=emmalloc")

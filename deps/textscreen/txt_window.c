@@ -1,7 +1,5 @@
-// Emacs style mode select   -*- C++ -*- 
-//-----------------------------------------------------------------------------
 //
-// Copyright(C) 2006 Simon Howard
+// Copyright(C) 2005-2014 Simon Howard
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
@@ -13,17 +11,15 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
-// You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
-// 02111-1307, USA.
-//
 
+#include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
 #include <string.h>
 
 #include "doomkeys.h"
 
+#include "txt_label.h"
 #include "txt_desktop.h"
 #include "txt_gui.h"
 #include "txt_io.h"
@@ -31,10 +27,18 @@
 #include "txt_separator.h"
 #include "txt_window.h"
 
+#ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#include <shellapi.h>
+#endif
+
 void TXT_SetWindowAction(txt_window_t *window,
                          txt_horiz_align_t position, 
-                         txt_window_action_t *action)
+                         TXT_UNCAST_ARG(action))
 {
+    TXT_CAST_ARG(txt_widget_t, action);
+
     if (window->actions[position] != NULL)
     {
         TXT_DestroyWidget(window->actions[position]);
@@ -46,11 +50,11 @@ void TXT_SetWindowAction(txt_window_t *window,
 
     if (action != NULL)
     {
-        action->widget.parent = &window->table.widget;
+        action->parent = &window->table.widget;
     }
 }
 
-txt_window_t *TXT_NewWindow(char *title)
+txt_window_t *TXT_NewWindow(const char *title)
 {
     int i;
 
@@ -75,11 +79,14 @@ txt_window_t *TXT_NewWindow(char *title)
     win->vert_align = TXT_VERT_CENTER;
     win->key_listener = NULL;
     win->mouse_listener = NULL;
+    win->help_url = NULL;
 
     TXT_AddWidget(win, TXT_NewSeparator(NULL));
 
     for (i=0; i<3; ++i)
+    {
         win->actions[i] = NULL;
+    }
 
     TXT_AddDesktopWindow(win);
 
@@ -161,7 +168,7 @@ static void LayoutActionArea(txt_window_t *window)
 
     if (window->actions[TXT_HORIZ_LEFT] != NULL)
     {
-        widget = (txt_widget_t *) window->actions[TXT_HORIZ_LEFT];
+        widget = window->actions[TXT_HORIZ_LEFT];
 
         TXT_CalcWidgetSize(widget);
 
@@ -169,16 +176,17 @@ static void LayoutActionArea(txt_window_t *window)
         widget->y = window->window_y + window->window_h - widget->h - 1;
 
         // Adjust available space:
-
         space_available -= widget->w;
         space_left_offset += widget->w;
+
+        TXT_LayoutWidget(widget);
     }
 
     // Draw the right action
 
     if (window->actions[TXT_HORIZ_RIGHT] != NULL)
     {
-        widget = (txt_widget_t *) window->actions[TXT_HORIZ_RIGHT];
+        widget = window->actions[TXT_HORIZ_RIGHT];
 
         TXT_CalcWidgetSize(widget);
 
@@ -186,25 +194,27 @@ static void LayoutActionArea(txt_window_t *window)
         widget->y = window->window_y + window->window_h - widget->h - 1;
 
         // Adjust available space:
-
         space_available -= widget->w;
+
+        TXT_LayoutWidget(widget);
     }
 
     // Draw the center action
 
     if (window->actions[TXT_HORIZ_CENTER] != NULL)
     {
-        widget = (txt_widget_t *) window->actions[TXT_HORIZ_CENTER];
+        widget = window->actions[TXT_HORIZ_CENTER];
 
         TXT_CalcWidgetSize(widget);
 
         // The left and right widgets have left a space sandwiched between
         // them.  Center this widget within that space.
-
         widget->x = window->window_x
                   + space_left_offset
                   + (space_available - widget->w) / 2;
         widget->y = window->window_y + window->window_h - widget->h - 1;
+
+        TXT_LayoutWidget(widget);
     }
 }
 
@@ -370,7 +380,7 @@ void TXT_SetWindowPosition(txt_window_t *window,
     window->y = y;
 }
 
-static void MouseButtonPress(txt_window_t *window, int b)
+static int MouseButtonPress(txt_window_t *window, int b)
 {
     int x, y;
     int i;
@@ -380,7 +390,7 @@ static void MouseButtonPress(txt_window_t *window, int b)
     // Lay out the window, set positions and sizes of all widgets
 
     TXT_LayoutWindow(window);
-    
+
     // Get the current mouse position
 
     TXT_GetMousePosition(&x, &y);
@@ -395,10 +405,10 @@ static void MouseButtonPress(txt_window_t *window, int b)
         if (window->mouse_listener(window, x, y, b, 
                                    window->mouse_listener_data))
         {
-            return;
+            return 1;
         }
     }
-    
+
     // Is it within the table range?
 
     widgets = (txt_widget_t *) window;
@@ -407,13 +417,14 @@ static void MouseButtonPress(txt_window_t *window, int b)
      && y >= widgets->y && y < (signed) (widgets->y + widgets->h))
     {
         TXT_WidgetMousePress(window, x, y, b);
+        return 1;
     }
 
     // Was one of the action area buttons pressed?
 
     for (i=0; i<3; ++i)
     {
-        widget = (txt_widget_t *) window->actions[i];
+        widget = window->actions[i];
 
         if (widget != NULL
          && x >= widget->x && x < (signed) (widget->x + widget->w)
@@ -433,22 +444,22 @@ static void MouseButtonPress(txt_window_t *window, int b)
             // Pass through mouse press.
 
             TXT_WidgetMousePress(widget, x, y, b);
-
-            break;
+            return 1;
         }
     }
+
+    return 0;
 }
 
-void TXT_WindowKeyPress(txt_window_t *window, int c)
+int TXT_WindowKeyPress(txt_window_t *window, int c)
 {
     int i;
 
     // Is this a mouse button ?
-    
+
     if (c >= TXT_MOUSE_BASE && c < TXT_MOUSE_BASE + TXT_MAX_MOUSE_BUTTONS)
     {
-        MouseButtonPress(window, c);
-        return;
+        return MouseButtonPress(window, c);
     }
 
     // Try the window key spy
@@ -459,15 +470,15 @@ void TXT_WindowKeyPress(txt_window_t *window, int c)
 
         if (window->key_listener(window, c, window->key_listener_data))
         {
-            return;
+            return 1;
         }
     }
 
-    // Send to the currently selected widget 
+    // Send to the currently selected widget:
 
     if (TXT_WidgetKeyPress(window, c))
     {
-        return;
+        return 1;
     }
 
     // Try all of the action buttons
@@ -477,9 +488,11 @@ void TXT_WindowKeyPress(txt_window_t *window, int c)
         if (window->actions[i] != NULL
          && TXT_WidgetKeyPress(window->actions[i], c))
         {
-            return;
+            return 1;
         }
     }
+
+    return 0;
 }
 
 void TXT_SetKeyListener(txt_window_t *window, TxtWindowKeyPress key_listener, 
@@ -500,5 +513,84 @@ void TXT_SetMouseListener(txt_window_t *window,
 void TXT_SetWindowFocus(txt_window_t *window, int focused)
 {
     TXT_SetWidgetFocus(window, focused);
+}
+
+void TXT_SetWindowHelpURL(txt_window_t *window, const char *help_url)
+{
+    window->help_url = help_url;
+}
+
+#ifdef _WIN32
+
+void TXT_OpenURL(const char *url)
+{
+    ShellExecute(NULL, "open", url, NULL, NULL, SW_SHOWNORMAL);
+}
+
+#else
+
+void TXT_OpenURL(const char *url)
+{
+    char *cmd;
+    size_t cmd_len;
+    int retval;
+
+    cmd_len = strlen(url) + 30;
+    cmd = malloc(cmd_len);
+
+#if defined(__MACOSX__)
+    TXT_snprintf(cmd, cmd_len, "open \"%s\"", url);
+#else
+    // The Unix situation sucks as usual, but the closest thing to a
+    // standard that exists is the xdg-utils package.
+    if (system("xdg-open --version 2>/dev/null") != 0)
+    {
+        fprintf(stderr,
+                "xdg-utils is not installed. Can't open this URL:\n%s\n", url);
+        free(cmd);
+        return;
+    }
+
+    TXT_snprintf(cmd, cmd_len, "xdg-open \"%s\"", url);
+#endif
+
+    retval = system(cmd);
+    if (retval != 0)
+    {
+        fprintf(stderr, "TXT_OpenURL: error executing '%s'; return code %d\n",
+            cmd, retval);
+    }
+    free(cmd);
+}
+
+#endif /* #ifndef _WIN32 */
+
+void TXT_OpenWindowHelpURL(txt_window_t *window)
+{
+    if (window->help_url != NULL)
+    {
+        TXT_OpenURL(window->help_url);
+    }
+}
+
+txt_window_t *TXT_MessageBox(const char *title, const char *message, ...)
+{
+    txt_window_t *window;
+    char buf[256];
+    va_list args;
+
+    va_start(args, message);
+    TXT_vsnprintf(buf, sizeof(buf), message, args);
+    va_end(args);
+
+    window = TXT_NewWindow(title);
+    TXT_AddWidget(window, TXT_NewLabel(buf));
+
+    TXT_SetWindowAction(window, TXT_HORIZ_LEFT, NULL);
+    TXT_SetWindowAction(window, TXT_HORIZ_CENTER, 
+                        TXT_NewWindowEscapeAction(window));
+    TXT_SetWindowAction(window, TXT_HORIZ_RIGHT, NULL);
+
+    return window;
 }
 

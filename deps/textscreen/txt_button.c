@@ -1,7 +1,5 @@
-// Emacs style mode select   -*- C++ -*- 
-//-----------------------------------------------------------------------------
 //
-// Copyright(C) 2006 Simon Howard
+// Copyright(C) 2005-2014 Simon Howard
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
@@ -13,11 +11,6 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
-// You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
-// 02111-1307, USA.
-//
 
 #include <stdlib.h>
 #include <string.h>
@@ -28,13 +21,14 @@
 #include "txt_gui.h"
 #include "txt_io.h"
 #include "txt_main.h"
+#include "txt_utf8.h"
 #include "txt_window.h"
 
 static void TXT_ButtonSizeCalc(TXT_UNCAST_ARG(button))
 {
     TXT_CAST_ARG(txt_button_t, button);
 
-    button->widget.w = strlen(button->label);
+    button->widget.w = TXT_UTF8_Strlen(button->label);
     button->widget.h = 1;
 }
 
@@ -50,7 +44,7 @@ static void TXT_ButtonDrawer(TXT_UNCAST_ARG(button))
 
     TXT_DrawString(button->label);
 
-    for (i=strlen(button->label); i < w; ++i)
+    for (i = TXT_UTF8_Strlen(button->label); i < w; ++i)
     {
         TXT_DrawString(" ");
     }
@@ -99,13 +93,13 @@ txt_widget_class_t txt_button_class =
     NULL,
 };
 
-void TXT_SetButtonLabel(txt_button_t *button, char *label)
+void TXT_SetButtonLabel(txt_button_t *button, const char *label)
 {
     free(button->label);
     button->label = strdup(label);
 }
 
-txt_button_t *TXT_NewButton(char *label)
+txt_button_t *TXT_NewButton(const char *label)
 {
     txt_button_t *button;
 
@@ -119,7 +113,7 @@ txt_button_t *TXT_NewButton(char *label)
 
 // Button with a callback set automatically
 
-txt_button_t *TXT_NewButton2(char *label, TxtWidgetSignalFunc func,
+txt_button_t *TXT_NewButton2(const char *label, TxtWidgetSignalFunc func,
                              void *user_data)
 {
     txt_button_t *button;
