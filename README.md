@@ -2,7 +2,7 @@
 
 ### What is this?
 
-This is a simple WebAssembly port of [ECWolf](https://maniacsvault.net/ecwolf/), a Wolfenstein 3D source port, for use in browsers. Emulates filesystem with IndexedDB. Uses the Emscripten JavaScript runtime, hopefully with a dedicated frontend coming soon, as the default frontend is not particularly advanced.
+This is a simple WebAssembly port of [ECWolf](https://maniacsvault.net/ecwolf/), a Wolfenstein 3D source port, for use in browsers. Emulates filesystem with IndexedDB. Unused dependencies stripped away to minimize bloat, but can be copied over from the original repository if desired. Uses the Emscripten JavaScript runtime, hopefully with a dedicated frontend coming soon, as the default frontend is not particularly advanced.
 
 ### How do I play the game?
 

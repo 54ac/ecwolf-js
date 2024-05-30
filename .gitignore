@@ -20,6 +20,7 @@ js-build.bat
 *.lnk
 /.vscode/
 
+.gitmodules
 /android-libs/
 /deps/bzip2/
 /deps/jpeg-6b/
@@ -27,3 +28,6 @@ js-build.bat
 /deps/SDL_mixer/
 /deps/SDL_net/
 /deps/zlib/
+/tools/zipdir/
+LocateSDL2.cmake
+docker.sh
