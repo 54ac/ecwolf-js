@@ -28,6 +28,3 @@ js-build.bat
 /deps/SDL_mixer/
 /deps/SDL_net/
 /deps/zlib/
-/tools/zipdir/
-LocateSDL2.cmake
-docker.sh

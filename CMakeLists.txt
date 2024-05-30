@@ -148,7 +148,7 @@ option(INTERNAL_BZIP2 "Force build with internal bzip2" OFF)
 option(INTERNAL_JPEG "Force build with internal libjpeg" OFF)
 
 option(EMSCRIPTEN_DEBUG "Emscripten debug build" ON)
-option(EMSCRIPTEN_DEFAULT_FRONTEND "Use Emscripten's built-in frontend - put ecwolf.pk3 in /js-static and IWADs in /js-static/iwad beforehand" ON)
+option(EMSCRIPTEN_DEFAULT_FRONTEND "Use Emscripten's built-in frontend - put ecwolf.pk3 in /js-static and IWADs in /js-static/iwad beforehand" OFF)
 
 if(EMSCRIPTEN)
 	set(EMSDK_INCLUDE "$ENV{EMSDK}/upstream/emscripten/cache/sysroot/include")
@@ -182,7 +182,7 @@ if(EMSCRIPTEN)
 		set(USE_LINKER_FLAGS "${USE_LINKER_FLAGS} --preload-file ${CMAKE_SOURCE_DIR}/js-static/ecwolf.pk3@ecwolf.pk3 --preload-file ${CMAKE_SOURCE_DIR}/js-static/iwad@/")
 
 		set(CMAKE_EXECUTABLE_SUFFIX .html)
-	elseif(EMSCRIPTEN_CUSTOM_FRONTEND)
+	else()
 		# Sane defaults for custom frontend
 		set(USE_LINKER_FLAGS "${USE_LINKER_FLAGS} -sMODULARIZE -sEXPORT_ES6")
 
