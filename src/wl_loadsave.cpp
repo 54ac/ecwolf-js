@@ -731,8 +731,8 @@ bool Save(const FString &filename, const FString &title)
 	#ifdef __EMSCRIPTEN__
 		EM_ASM(
 			FS.syncfs((err) => {
-				if (!err) console.log("Saved game");
-				else console.error("Error writing save file: " + err);
+				if (!err) console.log("Saved game to Emscripten filesystem");
+				else console.error("Error writing save file to Emscripten filesystem:", err);
 			});
 		);
 	#endif

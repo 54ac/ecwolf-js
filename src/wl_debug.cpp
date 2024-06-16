@@ -84,8 +84,8 @@ void PictureGrabber (void)
 	#ifdef __EMSCRIPTEN__
 		EM_ASM(
 			FS.syncfs((err) => {
-				if (!err) console.log("Screenshot saved");
-				else console.error("Failed to save screenshot: " + err);
+				if (!err) console.log("Screenshot saved to Emscripten filesystem");
+				else console.error("Failed to save screenshot to Emscripten filesystem:", err);
 			});
 		);
 	#endif

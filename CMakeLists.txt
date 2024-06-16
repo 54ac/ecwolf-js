@@ -151,44 +151,39 @@ option(EMSCRIPTEN_DEBUG "Emscripten debug build" ON)
 option(EMSCRIPTEN_DEFAULT_FRONTEND "Use Emscripten's built-in frontend - put ecwolf.pk3 in /js-static and IWADs in /js-static/iwad beforehand" OFF)
 
 if(EMSCRIPTEN)
-	set(EMSDK_INCLUDE "$ENV{EMSDK}/upstream/emscripten/cache/sysroot/include")
-
 	# Use Emscripten libraries
-  set(USE_FLAGS "-D__EMSCRIPTEN__ -sUSE_SDL=2 -sUSE_SDL_MIXER=2 -sUSE_SDL_NET=2 -sUSE_ZLIB -sUSE_BZIP2 -sUSE_LIBJPEG -I$EMSDK_INCLUDE -sDISABLE_EXCEPTION_CATCHING=0")
+	set(USE_FLAGS "-D__EMSCRIPTEN__ -sUSE_SDL=2 -sUSE_SDL_MIXER=2 -sUSE_SDL_NET=2 -sUSE_ZLIB -sUSE_BZIP2 -sUSE_LIBJPEG -sDISABLE_EXCEPTION_CATCHING=0")
 
 	# Default asyncify stack size crashes on game save, can probably be optimized
 	# Use IndexedDB by default
-	set(USE_LINKER_FLAGS "-sENVIRONMENT=web -sINITIAL_MEMORY=32MB -sASYNCIFY -sASYNCIFY_STACK_SIZE=16384 -sMALLOC=emmalloc -lidbfs.js")
+	set(USE_LINKER_FLAGS "-sENVIRONMENT=web -sINITIAL_MEMORY=48MB -sASYNCIFY -sASYNCIFY_STACK_SIZE=16384 -sMALLOC=emmalloc -lidbfs.js --pre-js ${CMAKE_SOURCE_DIR}/src/emscripten/js/setupPreRun.js")
 
 	if(EMSCRIPTEN_DEBUG)
 		set(USE_FLAGS "${USE_FLAGS} -O0 -g")
-		set(USE_LINKER_FLAGS "${USE_LINKER_FLAGS} --emrun")
 	else()
 		set(USE_FLAGS "${USE_FLAGS} -Os")
 	endif()
 
-	set(ZLIB_INCLUDE_DIR "${EMSDK_INCLUDE}")
-	set(BZIP2_INCLUDE_DIR "${EMSDK_INCLUDE}")
-	set(JPEG_INCLUDE_DIR "${EMSDK_INCLUDE}")
 	set(ZLIB_FOUND true)
 	set(BZIP2_FOUND true)
 	set(JPEG_FOUND true)
 
 	if(EMSCRIPTEN_DEFAULT_FRONTEND)
-		# Run init scripts for default frontend
-		set(USE_LINKER_FLAGS "${USE_LINKER_FLAGS} --pre-js ${CMAKE_SOURCE_DIR}/src/emscripten/js/setupPreRun.js")
-
 		# Pack game files - custom frontends can e.g. preload files with FS.createPreloadedFile in Module.preRun JS scripts instead
 		set(USE_LINKER_FLAGS "${USE_LINKER_FLAGS} --preload-file ${CMAKE_SOURCE_DIR}/js-static/ecwolf.pk3@ecwolf.pk3 --preload-file ${CMAKE_SOURCE_DIR}/js-static/iwad@/")
 
+		if(EMSCRIPTEN_DEBUG)
+			# Add emrun support - can pass command line arguments
+			set(USE_LINKER_FLAGS "${USE_LINKER_FLAGS} --emrun")
+		endif()
+
 		set(CMAKE_EXECUTABLE_SUFFIX .html)
 	else()
-		# Sane defaults for custom frontend
-		set(USE_LINKER_FLAGS "${USE_LINKER_FLAGS} -sMODULARIZE -sEXPORT_ES6")
+	# Sane defaults for custom frontend
+		set(USE_LINKER_FLAGS "${USE_LINKER_FLAGS} -sMODULARIZE -sEXPORT_ES6 -sEXPORT_NAME=createModule -sUSE_ES6_IMPORT_META=0 -sINVOKE_RUN=0 -sEXIT_RUNTIME -sEXPORTED_RUNTIME_METHODS=callMain,FS")
 
 		set(CMAKE_EXECUTABLE_SUFFIX .js)
 	endif()
-
 
 	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${USE_FLAGS}")
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${USE_FLAGS}")

@@ -45,6 +45,15 @@
 
 #ifdef __EMSCRIPTEN__
 	#include <emscripten.h>
+
+	// This makes syncFS synchronous in case the game exits before the sync is complete
+	EM_ASYNC_JS(void, syncFS_sync, (), {
+	await new Promise((resolve) => FS.syncfs((err) => {
+			if (!err) console.log("Synced Emscripten filesystem");
+			else console.error("Error syncing Emscripten filesystem:", err);
+			resolve();
+		}));
+	});
 #endif
 
 typedef TMap<FName, TUniquePtr<SettingsData> > SettingsMap;
@@ -197,12 +206,7 @@ void Config::SaveConfig()
 		fclose(stream);
 
 		#ifdef __EMSCRIPTEN__
-			EM_ASM(
-				FS.syncfs((err) => {
-					if (!err) console.log("Saved config");
-					else console.error("Error saving config: " + err);
-				});
-			);
+		syncFS_sync();
 		#endif
 	}
 }
