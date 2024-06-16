@@ -156,7 +156,7 @@ if(EMSCRIPTEN)
 
 	# Default asyncify stack size crashes on game save, can probably be optimized
 	# Use IndexedDB by default
-	set(USE_LINKER_FLAGS "-sENVIRONMENT=web -sINITIAL_MEMORY=48MB -sASYNCIFY -sASYNCIFY_STACK_SIZE=16384 -sMALLOC=emmalloc -lidbfs.js --pre-js ${CMAKE_SOURCE_DIR}/src/emscripten/js/setupPreRun.js")
+	set(USE_LINKER_FLAGS "-sENVIRONMENT=web -sINITIAL_MEMORY=48MB -sASYNCIFY -sASYNCIFY_STACK_SIZE=16384 -sMALLOC=emmalloc -lidbfs.js --pre-js \"${CMAKE_SOURCE_DIR}/src/emscripten/js/setupPreRun.js\"")
 
 	if(EMSCRIPTEN_DEBUG)
 		set(USE_FLAGS "${USE_FLAGS} -O0 -g")
@@ -170,7 +170,7 @@ if(EMSCRIPTEN)
 
 	if(EMSCRIPTEN_DEFAULT_FRONTEND)
 		# Pack game files - custom frontends can e.g. preload files with FS.createPreloadedFile in Module.preRun JS scripts instead
-		set(USE_LINKER_FLAGS "${USE_LINKER_FLAGS} --preload-file ${CMAKE_SOURCE_DIR}/js-static/ecwolf.pk3@ecwolf.pk3 --preload-file ${CMAKE_SOURCE_DIR}/js-static/iwad@/")
+		set(USE_LINKER_FLAGS "${USE_LINKER_FLAGS} --preload-file \"${CMAKE_SOURCE_DIR}/js-static/ecwolf.pk3@ecwolf.pk3\" --preload-file \"${CMAKE_SOURCE_DIR}/js-static/iwad@/\"")
 
 		if(EMSCRIPTEN_DEBUG)
 			# Add emrun support - can pass command line arguments
