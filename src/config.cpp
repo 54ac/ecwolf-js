@@ -49,8 +49,8 @@
 	// This makes syncFS synchronous in case the game exits before the sync is complete
 	EM_ASYNC_JS(void, syncFS_sync, (), {
 	await new Promise((resolve) => FS.syncfs((err) => {
-			if (!err) console.log("Synced Emscripten filesystem");
-			else console.error("Error syncing Emscripten filesystem:", err);
+			if (!err) console.log("Config saved to Emscripten filesystem");
+			else console.error("Failed to save config to Emscripten filesystem:", err);
 			resolve();
 		}));
 	});

@@ -69,6 +69,8 @@ Menu resolutionMenu(90, 25, 150, 24);
 
 MENU_LISTENER(PlayDemosOrReturnToGame)
 {
+	WriteConfig();
+
 	Menu::closeMenus();
 	if (!ingame)
 		StartCPMusic(gameinfo.TitleMusic);
@@ -216,6 +218,8 @@ MENU_LISTENER(StartNewGame)
 
 	if(episode == NULL)
 		episode = &EpisodeInfo::GetEpisode(0);
+
+	WriteConfig();
 
 	Menu::closeMenus();
 	NewGame(which, episode->StartMap, true, playerClass);
