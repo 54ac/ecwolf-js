@@ -147,8 +147,8 @@ option(INTERNAL_ZLIB "Force build with internal zlib" OFF)
 option(INTERNAL_BZIP2 "Force build with internal bzip2" OFF)
 option(INTERNAL_JPEG "Force build with internal libjpeg" OFF)
 
-option(EMSCRIPTEN_DEBUG "Emscripten debug build" OFF)
-option(EMSCRIPTEN_DEFAULT_FRONTEND "Use Emscripten's built-in frontend - put ecwolf.pk3 in /js-static and IWADs in /js-static/iwad beforehand" OFF)
+option(EMSCRIPTEN_DEBUG "Emscripten debug build" ON)
+option(EMSCRIPTEN_DEFAULT_FRONTEND "Use Emscripten's built-in frontend - put ecwolf.pk3 in /js-static and IWADs in /js-static/iwad beforehand" ON)
 
 if(EMSCRIPTEN)
 	# Use Emscripten libraries
