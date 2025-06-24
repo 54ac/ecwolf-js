@@ -18,6 +18,10 @@
 #include "wl_main.h"
 #include "wl_play.h"
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#endif
+
 
 // Uncomment the following line, if you get destination out of bounds
 // assertion errors and want to ignore them during debugging
@@ -31,7 +35,7 @@
 #define assert_ret(x) assert(x)
 #endif
 
-bool fullscreen = true;
+bool fullscreen = false;
 unsigned screenWidth = 640;
 unsigned screenHeight = 480;
 unsigned fullScreenWidth = 640;
@@ -47,6 +51,8 @@ unsigned scaleFactorX, scaleFactorY;
 
 bool	 screenfaded;
 
+bool fullscreenDetected = false; // For when the browser disables fullscreen by itself
+
 //===========================================================================
 
 void VL_ToggleFullscreen()
@@ -56,6 +62,7 @@ void VL_ToggleFullscreen()
 
 void VL_SetFullscreen(bool isFull)
 {
+	fullscreenDetected = true;
 	vid_fullscreen = fullscreen = isFull;
 
 	if (fullscreen)
@@ -78,6 +85,20 @@ void VL_SetFullscreen(bool isFull)
 	}
 	IN_AdjustMouse();
 }
+
+#ifdef __EMSCRIPTEN__
+	// Check if fullscreen changed by browser
+	extern "C" void EMSCRIPTEN_KEEPALIVE SetFullscreenEmscripten(bool isFull) {
+		if (fullscreenDetected) {
+			fullscreenDetected = false;
+			return;
+		}
+
+		printf("SetFullscreenEmscripten called with %d\n", isFull);
+		vid_fullscreen = fullscreen = isFull;
+		IN_AdjustMouse();
+	}
+#endif
 
 //===========================================================================
 

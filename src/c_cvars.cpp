@@ -49,7 +49,7 @@ static bool doWriteConfig = false;
 Aspect r_ratio = ASPECT_4_3, vid_aspect = ASPECT_NONE;
 bool forcegrabmouse = false;
 bool vid_fullscreen = false;
-bool vid_vsync = false;
+bool vid_vsync = true;
 bool quitonescape = false;
 fixed movebob = FRACUNIT;
 
@@ -190,7 +190,7 @@ void ReadConfig(void)
 	config.CreateSetting("DigitizedVolume", MAX_VOLUME);
 	config.CreateSetting("Vid_FullScreen", false);
 	config.CreateSetting("Vid_Aspect", ASPECT_NONE);
-	config.CreateSetting("Vid_Vsync", false);
+	config.CreateSetting("Vid_Vsync", true);
 	config.CreateSetting("FullScreenWidth", fullScreenWidth);
 	config.CreateSetting("FullScreenHeight", fullScreenHeight);
 	config.CreateSetting("WindowedScreenWidth", windowedScreenWidth);
@@ -254,7 +254,7 @@ void ReadConfig(void)
 	AdlibVolume = config.GetSetting("SoundVolume")->GetInteger();
 	MusicVolume = config.GetSetting("MusicVolume")->GetInteger();
 	SoundVolume = config.GetSetting("DigitizedVolume")->GetInteger();
-	vid_fullscreen = config.GetSetting("Vid_FullScreen")->GetInteger() != 0;
+	vid_fullscreen = 0; // default to windowed mode on start for web
 	vid_aspect = static_cast<Aspect>(config.GetSetting("Vid_Aspect")->GetInteger());
 	vid_vsync = config.GetSetting("Vid_Vsync")->GetInteger() != 0;
 	fullScreenWidth = config.GetSetting("FullScreenWidth")->GetInteger();
